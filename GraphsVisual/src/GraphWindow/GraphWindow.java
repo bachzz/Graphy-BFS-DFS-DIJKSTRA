@@ -477,10 +477,12 @@ public class GraphWindow extends JPanel {
             	RE_DRAW();
 
             	//delay function
-            	for(long i=0;i<1000000000;i++);
-            	for(long i=0;i<1000000000;i++);
-            	for(long i=0;i<1000000000;i++);
-            	for(long i=0;i<1000000000;i++);
+            	try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 //            	TODO input smt to GO_NEXT or GO_BACK
 //            	if() {
@@ -524,10 +526,12 @@ public class GraphWindow extends JPanel {
             	System.out.println(data_contain);
             	RE_DRAW();
             	//delay function
-            	for(long i=0;i<1000000000;i++);
-            	for(long i=0;i<1000000000;i++);
-            	for(long i=0;i<1000000000;i++);
-            	for(long i=0;i<1000000000;i++);
+            	try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 //            	TODO input smt to GO_NEXT or GO_BACK
 //            	if() {
@@ -570,10 +574,12 @@ public class GraphWindow extends JPanel {
             	System.out.println(data_contain);
             	RE_DRAW();
             	//delay function
-            	for(long i=0;i<1000000000;i++);
-            	for(long i=0;i<1000000000;i++);
-            	for(long i=0;i<1000000000;i++);
-            	for(long i=0;i<1000000000;i++);
+            	try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 //            	TODO input smt to GO_NEXT or GO_BACK
 //            	if() {
@@ -626,10 +632,12 @@ public class GraphWindow extends JPanel {
             	System.out.println(data_contain);
             	RE_DRAW();
             	//delay function
-            	for(long i=0;i<1000000000;i++);
-            	for(long i=0;i<1000000000;i++);
-            	for(long i=0;i<1000000000;i++);
-            	for(long i=0;i<1000000000;i++);
+            	try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 //            	TODO input smt to GO_NEXT or GO_BACK
 //            	if() {
