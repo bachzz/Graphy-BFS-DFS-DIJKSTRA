@@ -7,6 +7,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.*;
 import java.util.List;
 import javax.swing.Timer;
@@ -32,7 +33,7 @@ public class GraphWindow extends JPanel {
 	private JButton resetBtn; // reset RE_DRAW
 	private JButton clearBtn; // clear console
 	private JButton startBtn; // start simulation
-	private String[] algo = { "BFS", "DFS", "Dijkstra" };;
+	private String[] algo = { "BFS", "DFS", "Dijkstra","A* Search"};;
 	private JComboBox<Object> algoCmb;
 
 	//the thing that can draw everything
@@ -181,12 +182,14 @@ public class GraphWindow extends JPanel {
         connMem.clear();
 
         /* Create nodes - colors & labels */
-        if(locations.size()!=0)consoleLog("   ----Node----");
+        if(!cur_run)if(locations.size()!=0)consoleLog("   ----Node----");
      	for (int i = 0; i < locations.size(); i++) {
      		Point thePoint = (Point) locations.values().toArray()[i];
      		//retype node & location
      		int vertex=(int)locations.keySet().toArray()[i];
-     		consoleLog("N"+vertex+" at ("+locations.get(vertex).x+","+locations.get(vertex).y+")");//fix
+     		if(!cur_run) {
+     			consoleLog("N"+vertex+" at ("+locations.get(vertex).x+","+locations.get(vertex).y+")");//fix
+     		}
 
      		if (locations.keySet().toArray()[i].equals((Integer) _source)) {
      			graphicHandle.setColor(Color.GREEN);
@@ -202,7 +205,7 @@ public class GraphWindow extends JPanel {
      					_SIZE_OF_NODE);
      	}
 
-     	consoleLog("");
+     	if(!cur_run)consoleLog("");
 
      	// Node labels.
      	graphicHandle.setColor(Color.WHITE);
@@ -214,7 +217,7 @@ public class GraphWindow extends JPanel {
 
 		//draw some line
 		graphicHandle.setStroke(new BasicStroke(2));//draw thin line
-		if(count_line!=0)consoleLog("   ----Line----");
+		if(!cur_run)if(count_line!=0)consoleLog("   ----Line----");
 		graphicHandle.setColor(Color.cyan);
 		for (int i = 0; i < locations.size(); i++) {
 			Integer sourceKey = (Integer) nodes.keySet().toArray()[i];
@@ -224,17 +227,20 @@ public class GraphWindow extends JPanel {
 					Point destPoint  = locations.get(destKey);
 					graphicHandle.drawLine(thePoint.x, thePoint.y, destPoint .x, destPoint .y);
 					connMem.put(sourceKey, destKey);
-					//cal distance
-					Double dis=Math.sqrt(sqr(locations.get(sourceKey).x-locations.get(destKey).x)+sqr(locations.get(sourceKey).y-locations.get(destKey).y));
-					//retype path
-					consoleLog("N"+(sourceKey>99?sourceKey:sourceKey>9?sourceKey+" ":sourceKey+"  ")+" -> N"+(destKey>99?destKey:destKey>9?destKey+" ":destKey+"  ")+" dis:"+Double.parseDouble(String.format("%.3f", dis)));
+					if(!cur_run) {
+						//cal distance
+						Double dis=Math.sqrt(sqr(locations.get(sourceKey).x-locations.get(destKey).x)+sqr(locations.get(sourceKey).y-locations.get(destKey).y));
+						//retype path
+						consoleLog("N"+(sourceKey>99?sourceKey:sourceKey>9?sourceKey+" ":sourceKey+"  ")+" -> N"+(destKey>99?destKey:destKey>9?destKey+" ":destKey+"  ")+" dis:"+Double.parseDouble(String.format("%.3f", dis)));
+					}
 				}
 			}
 		}
-		consoleLog("");
+		if(!cur_run)consoleLog("");
 
 		//                                      when running
 		if(cur_run) {
+			consoleLog("----process----");
 			//draw some point && some line  with same color
 			graphicHandle.setColor(Color.YELLOW);
 			for(Point itr:visited) {
@@ -470,13 +476,11 @@ public class GraphWindow extends JPanel {
             	System.out.println(data_contain);
             	RE_DRAW();
 
-            	//delay function    	
-            	try {
-					Thread.sleep(3000);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+            	//delay function
+            	for(long i=0;i<1000000000;i++);
+            	for(long i=0;i<1000000000;i++);
+            	for(long i=0;i<1000000000;i++);
+            	for(long i=0;i<1000000000;i++);
 
 //            	TODO input smt to GO_NEXT or GO_BACK
 //            	if() {
@@ -519,15 +523,12 @@ public class GraphWindow extends JPanel {
             	data_contain=new String(solution.run(step,visited));
             	System.out.println(data_contain);
             	RE_DRAW();
-            	
-            	//delay function    	
-            	try {
-					Thread.sleep(3000);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-            	
+            	//delay function
+            	for(long i=0;i<1000000000;i++);
+            	for(long i=0;i<1000000000;i++);
+            	for(long i=0;i<1000000000;i++);
+            	for(long i=0;i<1000000000;i++);
+
 //            	TODO input smt to GO_NEXT or GO_BACK
 //            	if() {
 //            		step++;
@@ -568,14 +569,67 @@ public class GraphWindow extends JPanel {
             	data_contain=new String(solution.run(step,visited));
             	System.out.println(data_contain);
             	RE_DRAW();
+            	//delay function
+            	for(long i=0;i<1000000000;i++);
+            	for(long i=0;i<1000000000;i++);
+            	for(long i=0;i<1000000000;i++);
+            	for(long i=0;i<1000000000;i++);
 
-            	//delay function    	
-            	try {
-					Thread.sleep(3000);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+//            	TODO input smt to GO_NEXT or GO_BACK
+//            	if() {
+//            		step++;
+//            		continue;
+//            	}
+//            	else if() {
+//            		step--;
+//            		continue;
+//            	}
+            	if(data_contain.equals("end"))break;
+            }
+            cur_run=false;
+
+
+            if(solution.path(_source,_dest,path_length,_path_)) {
+            	check_run=true;
+            	check_Dijkstra=true;
+            	RE_DRAW();
+            }
+            else {/* print something when error occurs */
+            	consoleLog("fail run Dijkstra from "+_source+" to "+_dest);
+            }
+        }
+        else if (x == "A* Search") {
+            txtConsole.setText("");
+            if (_source == -1 || _dest == -1) {
+                if (_source == -1) {
+                    consoleLog("Please choose a source by double clicking a node");
+                } else {
+                    consoleLog("Please choose a destination by double clicking a node");
+                }
+                return;
+            }
+            A_start_search solution=new A_start_search();
+            // special for A*: heuristic to destianation
+            ArrayList<Double>euler_destination=new ArrayList<Double>();
+            for(Integer i = 0 ; i <id+1 ; i++) {
+            	euler_destination.add(1e6);
+            	if(nodes.get(i)==null)continue;
+            	dis=Math.sqrt(sqr(locations.get(i).x-locations.get(_dest).x)+sqr(locations.get(i).y-locations.get(_dest).y));
+            	euler_destination.set(i, dis);
+            }
+
+            solution.init(graph, euler_destination, _source, _dest, id+1);
+            //solution.run();
+            cur_run=true;
+            for(int step=0;true;step++){
+            	data_contain=new String(solution.run(step,visited));
+            	System.out.println(data_contain);
+            	RE_DRAW();
+            	//delay function
+            	for(long i=0;i<1000000000;i++);
+            	for(long i=0;i<1000000000;i++);
+            	for(long i=0;i<1000000000;i++);
+            	for(long i=0;i<1000000000;i++);
 
 //            	TODO input smt to GO_NEXT or GO_BACK
 //            	if() {
