@@ -13,7 +13,7 @@ public class Dijkstra {
 	private double[] dis;
 	private int[] pre;
 	private LinkedList<Integer> visitedQ = new LinkedList<Integer>();
-	
+
 	public void init(ArrayList<City>[] graph, int start,int dest, int num_city) {
 		this.graph = graph;
 		this.start = start;
@@ -30,6 +30,7 @@ public class Dijkstra {
 	}
 
 	public void run() {
+		double best = Double.MAX_VALUE;
 		que.add(new City(start, 0L));
 		while (que.size() > 0) {
 			City temp = que.poll();
@@ -38,6 +39,8 @@ public class Dijkstra {
 					dis[itr.city] = itr.distance + temp.distance;
 					pre[itr.city] = temp.city;
 					que.add(new City(itr.city, itr.distance + temp.distance));
+					if(dis[que.peek().city]>best)return ;//optimal
+					if(itr.city==dest)best=(best>dis[dest]?dis[dest]:best);
 				}
 			}
 		}
@@ -47,18 +50,16 @@ public class Dijkstra {
 		int stop=0;
 		que.clear();
 		visitedQ.clear();
-		
-		double best = Double.MAX_VALUE;;
+		double best = Double.MAX_VALUE;
 		for (int i = 0; i < num_city; i++) {
 			dis[i] = Double.MAX_VALUE;
 			pre[i] = -1;
 		}
 		dis[start] = 0;
 		pre[start] = -2;
-
-		que.add(new City(start, 0L));
-		visitedQ.add(start);
 		
+		visitedQ.add(start);
+		que.add(new City(start, 0L));
 		while (que.size() > 0) {
 			City temp = que.poll();
 			for (City itr : graph[temp.city]) {
@@ -71,17 +72,30 @@ public class Dijkstra {
 					dis[itr.city] = itr.distance + temp.distance;
 					pre[itr.city] = temp.city;
 					que.add(new City(itr.city, itr.distance + temp.distance));
+
 					visitedQ.add(itr.city);
-					
-					if(stop==step) {
-						String str=new String("\n\nQueue = [ ");for(City itr1:que)str+=itr1.city+" ";str+="]";
-						System.out.println(str);
-						str+="\n\nVisited = [";
-						for(Integer itr1:visitedQ)str+=itr1.toString()+" ";
+
+					if(stop>=step) {
+						int c=10;
+						String str=new String("Queue = [ ");
+						for(City itr1:que){
+							c+=(itr1.city+" ").length();
+							if(c>=25) {c=0;str+="\n";}
+							str+=itr1.city+" ";
+						}
+						str+="]";
+						c=10;
+						str+="\nVisited = [";
+						for(Integer itr1:visitedQ) {
+							c+=(itr1.toString()+" ").length();
+							if(c>=25) {c=0;str+="\n";}
+							str+=itr1.toString()+" ";
+						}
 						str+="]";
 						System.out.println(str);
 						return str;
 					}
+
 					if(dis[que.peek().city]>best)return "end";//optimal
 					if(itr.city==dest)best=(best>dis[dest]?dis[dest]:best);
 

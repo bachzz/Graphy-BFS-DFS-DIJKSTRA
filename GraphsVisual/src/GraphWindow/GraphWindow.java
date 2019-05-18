@@ -29,16 +29,29 @@ public class GraphWindow extends JPanel {
 
 	private JPanel inputPanel; // under the text a container for all the input elements
 	private JPanel btnPanel;
+
 	private JLabel text;
 	private JButton resetBtn; // reset RE_DRAW
 	private JButton clearBtn; // clear console
-	private JButton startBtn; // start simulation
+	// private JButton startBtn; // start simulation
 	private String[] algo = { "BFS", "DFS", "Dijkstra","A* Search"};;
 	private JComboBox<Object> algoCmb;
 
 	//the thing that can draw everything
-	static Graphics2D graphicHandle;
-	static BufferedImage  bufferImage;
+	Graphics2D graphicHandle;
+	BufferedImage  bufferImage;
+
+	//this new
+	private JPanel playPanel;
+	private JButton backBackBtn;
+	private JButton backBtn;
+	private JButton playBtn; // start simulation
+	private JButton pauseBtn; // pause simulation
+	private JButton nextBtn;
+	private JButton nextNextBtn;
+	private JPanel algoPanel;
+	private JSplitPane splitPaneChild;
+	private JScrollPane scrollAlgo;
 
 	private int _selectedNode = -1;
 	int _SIZE_OF_NODE = 20;
@@ -50,16 +63,19 @@ public class GraphWindow extends JPanel {
 	private HashMap<Integer, HashSet<Integer>> nodes = new HashMap<Integer, HashSet<Integer>>();// 'set of path' of each node
 	private HashMap<Integer, Point> locations = new HashMap<Integer, Point>();                  //  list of location of each node
 	private HashMap<Integer, Integer> connMem = new HashMap<>();                        //  check the path not RE-DRAW twice
-	private List<Integer>_path_ =new ArrayList<Integer>();                                      //  path of solution
+	private List<Integer>_path_ =new ArrayList<Integer>();                             //  path of solution
 	private int count_line=0;
+	JTextArea detail = new JTextArea();
 
 	City path_length=new City(0,0);//I want to pass by reference
 
 	// when running
 	private boolean cur_run=false;
 	private ArrayList<Point> visited=new ArrayList<Point>();
-	private String data_contain="fuck";
-
+	private String data_contain="";
+	private Thread global_thread;
+	private int step=0;
+	private boolean LOOP_MOD=true;
 
 	public void init() {
 		window = new JFrame("Graphy");
@@ -74,12 +90,50 @@ public class GraphWindow extends JPanel {
 		inputPanel = new JPanel();
 		btnPanel = new JPanel();
 		text = new JLabel("   SOURCE: [unknown]    DEST: [unknown]");
-
-		resetBtn = new JButton("Reset");
-		clearBtn = new JButton("Clear console");
-		startBtn = new JButton("Start");
+		playPanel = new JPanel();
+		splitPaneChild = new JSplitPane();
+		algoPanel = new JPanel();
+		scrollAlgo = new JScrollPane();
 		algoCmb = new JComboBox<Object>(algo);
 
+		resetBtn = new JButton("Reset");//
+		clearBtn = new JButton("Clear console");//
+		backBackBtn = new JButton("<<");//
+		backBtn = new JButton("<");//
+		playBtn = new JButton("Play");//
+		pauseBtn = new JButton("Pause");//
+		nextBtn = new JButton(">");
+		nextNextBtn = new JButton(">>");
+
+		nextNextBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnNextNextActionPerformed(evt);
+            }
+		});
+
+		nextBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnNextActionPerformed(evt);
+            }
+		});
+
+		backBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnBackActionPerformed(evt);
+            }
+		});
+
+		backBackBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnBackBackActionPerformed(evt);
+            }
+		});
+
+		pauseBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnPauseActionPerformed(evt);
+            }
+		});
 
 		resetBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -87,7 +141,7 @@ public class GraphWindow extends JPanel {
             }
 		});
 
-		startBtn.addActionListener(new ActionListener() {
+		playBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnStartActionPerformed(evt);
             }
@@ -99,6 +153,20 @@ public class GraphWindow extends JPanel {
             }
 		});
 
+		/* Algo panel */
+
+		algoCmb.addActionListener (new ActionListener () {
+		    public void actionPerformed(ActionEvent e) {
+		        algoCmbOnChange();
+		    }
+		});
+
+		algoPanel.setLayout(new BoxLayout(algoPanel, BoxLayout.Y_AXIS));
+		algoPanel.add(scrollAlgo);
+		algoPanel.setBackground(Color.red);
+
+		scrollAlgo.setViewportView(detail);
+
 		/* SplitPane
 		 * - left: console log
 		 * - right: graphPanel + inputPanel
@@ -106,7 +174,13 @@ public class GraphWindow extends JPanel {
 		splitPane.setOrientation(JSplitPane.HORIZONTAL_SPLIT); // split the window horizontally
 		splitPane.setDividerLocation(200); // initial position of the divider is 200
 		splitPane.setLeftComponent(leftPanel);
-		splitPane.setRightComponent(rightPanel);
+		//splitPane.setRightComponent(rightPanel);
+		splitPane.setRightComponent(splitPaneChild);
+
+		splitPaneChild.setOrientation(JSplitPane.HORIZONTAL_SPLIT); // split the window horizontally
+		splitPaneChild.setDividerLocation(600); // initial position of the divider is 200
+		splitPaneChild.setLeftComponent(rightPanel);
+		splitPaneChild.setRightComponent(algoPanel);
 
 		leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
 		leftPanel.add(scrollPane);
@@ -140,11 +214,11 @@ public class GraphWindow extends JPanel {
 		});
 
 		inputPanel.setLayout(new GridLayout(2, 1));
-		inputPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100)); // set the max height to 75 and the max width to (almost) unlimited
+		inputPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 150)); // set the max height to 75 and the max width to (almost) unlimited
 		// inputPanel.setLayout(new BoxLayout(inputPanel, BoxLayout.X_AXIS)); // X_Axis
 		// will arrange the content horizontally
 		inputPanel.setBackground(new Color(0, 0, 40));
-		inputPanel.setPreferredSize(new Dimension(Integer.MAX_VALUE, 100));
+		inputPanel.setPreferredSize(new Dimension(Integer.MAX_VALUE, 150));
 		inputPanel.setBorder(BorderFactory.createEtchedBorder());
 		inputPanel.add(text);
 
@@ -153,15 +227,25 @@ public class GraphWindow extends JPanel {
 		btnPanel.add(resetBtn);
 		btnPanel.add(clearBtn);
 		btnPanel.add(algoCmb);
-		btnPanel.add(startBtn);
+//		btnPanel.add(startBtn);
+		playPanel.add(backBackBtn);
+//		btnPanel.add(startBtn);
+		playPanel.add(backBtn);
+		playPanel.add(playBtn);
+		playPanel.add(pauseBtn);
+		playPanel.add(nextBtn);
+		playPanel.add(nextNextBtn);
+		playPanel.setBackground(new Color(0, 0, 40));
 		btnPanel.setBackground(new Color(0, 0, 40));
+		btnPanel.add(playPanel);
 		inputPanel.add(btnPanel);
 
 		// pack(); // calling pack() at the end, will ensure that every layout and size we just defined gets applied before the stuff becomes visible
 		window.add(splitPane);
-		window.setSize(800, 600);
+		window.setSize(1200, 700);
 		window.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		window.setVisible(true);
+		algoCmbOnChange();
 	}
 	                                        /* Re-draw SMT */
 	public void RE_DRAW() {
@@ -182,14 +266,12 @@ public class GraphWindow extends JPanel {
         connMem.clear();
 
         /* Create nodes - colors & labels */
-        if(!cur_run)if(locations.size()!=0)consoleLog("   ----Node----");
+        if(locations.size()!=0)consoleLog("   ----Node----");
      	for (int i = 0; i < locations.size(); i++) {
      		Point thePoint = (Point) locations.values().toArray()[i];
      		//retype node & location
      		int vertex=(int)locations.keySet().toArray()[i];
-     		if(!cur_run) {
-     			consoleLog("N"+vertex+" at ("+locations.get(vertex).x+","+locations.get(vertex).y+")");//fix
-     		}
+     		consoleLog("N"+vertex+" at ("+locations.get(vertex).x+","+locations.get(vertex).y+")");//fix
 
      		if (locations.keySet().toArray()[i].equals((Integer) _source)) {
      			graphicHandle.setColor(Color.GREEN);
@@ -204,8 +286,7 @@ public class GraphWindow extends JPanel {
      		graphicHandle.fillOval(thePoint.x - _SIZE_OF_NODE / 2, thePoint.y - _SIZE_OF_NODE / 2, _SIZE_OF_NODE,
      					_SIZE_OF_NODE);
      	}
-
-     	if(!cur_run)consoleLog("");
+     	consoleLog("");
 
      	// Node labels.
      	graphicHandle.setColor(Color.WHITE);
@@ -217,7 +298,7 @@ public class GraphWindow extends JPanel {
 
 		//draw some line
 		graphicHandle.setStroke(new BasicStroke(2));//draw thin line
-		if(!cur_run)if(count_line!=0)consoleLog("   ----Line----");
+		if(count_line!=0)consoleLog("   ----Line----");
 		graphicHandle.setColor(Color.cyan);
 		for (int i = 0; i < locations.size(); i++) {
 			Integer sourceKey = (Integer) nodes.keySet().toArray()[i];
@@ -227,20 +308,18 @@ public class GraphWindow extends JPanel {
 					Point destPoint  = locations.get(destKey);
 					graphicHandle.drawLine(thePoint.x, thePoint.y, destPoint .x, destPoint .y);
 					connMem.put(sourceKey, destKey);
-					if(!cur_run) {
-						//cal distance
-						Double dis=Math.sqrt(sqr(locations.get(sourceKey).x-locations.get(destKey).x)+sqr(locations.get(sourceKey).y-locations.get(destKey).y));
-						//retype path
-						consoleLog("N"+(sourceKey>99?sourceKey:sourceKey>9?sourceKey+" ":sourceKey+"  ")+" -> N"+(destKey>99?destKey:destKey>9?destKey+" ":destKey+"  ")+" dis:"+Double.parseDouble(String.format("%.3f", dis)));
-					}
+					//cal distance
+					Double dis=Math.sqrt(sqr(locations.get(sourceKey).x-locations.get(destKey).x)+sqr(locations.get(sourceKey).y-locations.get(destKey).y));
+					//retype path
+					consoleLog("N"+(sourceKey>99?sourceKey:sourceKey>9?sourceKey+" ":sourceKey+"  ")+" -> N"+(destKey>99?destKey:destKey>9?destKey+" ":destKey+"  ")+" dis:"+Double.parseDouble(String.format("%.3f", dis)));
 				}
 			}
 		}
-		if(!cur_run)consoleLog("");
+		consoleLog("");
 
 		//                                      when running
 		if(cur_run) {
-			consoleLog("----process----");
+			//consoleLog("----process----");
 			//draw some point && some line  with same color
 			graphicHandle.setColor(Color.YELLOW);
 			for(Point itr:visited) {
@@ -281,6 +360,7 @@ public class GraphWindow extends JPanel {
 		// update source and destination
 		if(check_Dijkstra)text.setText("   SOURCE: "+(_source==-1?"[unknown]":_source)+"    DEST: "+(_dest==-1?"[unknown]":_dest)+"    PATH_LENGTH: "+Double.parseDouble(String.format("%.3f", path_length.getDistance())));
 		else text.setText("   SOURCE: "+(_source==-1?"[unknown]":_source)+"    DEST: "+(_dest==-1?"[unknown]":_dest));//fix
+		graphicHandle.setColor(Color.YELLOW);//
 	}
 
 	// run after click button start; draw the dot line
@@ -330,6 +410,7 @@ public class GraphWindow extends JPanel {
         }
 	}
 
+	@SuppressWarnings("deprecation")
 	private void graphMousePressed(MouseEvent evt) {
 		_selectedNode = nodeSelected(evt.getX(), evt.getY());
 		if (_selectedNode < 0 && SwingUtilities.isLeftMouseButton(evt)) {
@@ -338,11 +419,18 @@ public class GraphWindow extends JPanel {
 			locations.put(id++, new Point(evt.getX(), evt.getY()));
 		}else if (SwingUtilities.isRightMouseButton(evt)) {
 			//delete node & stop running
+			try {
+				global_thread.stop();
+			}catch (Exception e) {
+				e.printStackTrace();
+			}
 			_path_.clear();
 			_source = -1;
 			_dest = -1;
+			cur_run=false;
 			check_run=false;
 			check_Dijkstra=false;
+			LOOP_MOD=true;
 			nodes.remove(_selectedNode);
 			locations.remove(_selectedNode);
 
@@ -409,8 +497,10 @@ public class GraphWindow extends JPanel {
 
 							/*Button Action*/
 	void btnResetActionPerformed(ActionEvent evt) {
+		cur_run=false;
 		check_run=false;
 		check_Dijkstra=false;
+		LOOP_MOD=true;
 		count_line=0;
 
 		nodes = new HashMap<Integer, HashSet<Integer>>();
@@ -430,12 +520,46 @@ public class GraphWindow extends JPanel {
 		txtConsole.setText("");
 	}
 
+	void btnPauseActionPerformed(ActionEvent evt) {
+		System.out.println("PAUSE!!!");
+		if(LOOP_MOD) {LOOP_MOD=false;pauseBtn.setText("Continue");}
+		else {LOOP_MOD=true;pauseBtn.setText("Pause");}
+
+	}
+
+	void btnBackActionPerformed(ActionEvent evt) {
+		System.out.println("BACK");
+		step--;
+	}
+
+	void btnBackBackActionPerformed(ActionEvent evt) {
+		System.out.println("BACKBACK");
+		step=0;
+	}
+
+	void btnNextActionPerformed(ActionEvent evt) {
+		System.out.println("NEXT");
+		step++;
+	}
+
+	void btnNextNextActionPerformed(ActionEvent evt) {
+		System.out.println("NEXTNEXT");
+		step=999999;
+	}
+
+	@SuppressWarnings("deprecation")
 	void btnStartActionPerformed(ActionEvent evt) {
 		//clear path & smt after click start
+		try {
+			global_thread.stop();
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
 		check_run=false;
     	check_Dijkstra=false;
 		_path_.clear();
 		visited.clear();
+		step=0;
 
 		String x = String.valueOf(algoCmb.getSelectedItem());
         txtConsole.setText("");
@@ -469,43 +593,40 @@ public class GraphWindow extends JPanel {
 
             Dfs solution=new Dfs();
             solution.init(graph, _source, _dest, id+1);
-            cur_run=true;
-            for(int step=0;true;step++){
-
-            	data_contain=new String(solution.run(step,visited));
-            	System.out.println(data_contain);
-            	RE_DRAW();
-
-            	//delay function
-            	try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-//            	TODO input smt to GO_NEXT or GO_BACK
-//            	if() {
-//            		step++;
-//            		continue;
-//            	}
-//            	else if() {
-//            		step--;
-//            		continue;
-//            	}
-            	if(data_contain.equals("end"))break;
-            }
-
-            cur_run=false;
-
-            if(solution.path(_source,_dest,_path_)) {
-            	check_run=true;
-            	check_Dijkstra=false;
-            	RE_DRAW();
-            }
-            else {/* print something when error occurs */
-            	consoleLog("fail run DFS from "+_source+" to "+_dest);
-            }
+            // TODO this is new
+            Runnable runner =
+            	    new Runnable(){
+            	        public void run(){
+            	        	cur_run=true;
+            	            System.out.println("LOOP MODE");
+            	            for(;true;){
+            	            	visited.clear();
+            	            	data_contain=new String(solution.run(step,visited));
+            	            	System.out.println(data_contain);
+            	            	RE_DRAW();
+            	            	//delay function
+            	            	try {
+            						Thread.sleep(1000);
+            					} catch (InterruptedException e) {
+            						e.printStackTrace();
+            					}
+            	            	if(data_contain.equals("end"))break;
+            	            	if(LOOP_MOD)step++;
+            	            }
+            	            cur_run=false;
+            	            if(solution.path(_source,_dest,_path_)) {
+            	            	check_run=true;
+            	            	check_Dijkstra=false;
+            	            	RE_DRAW();
+            	            }
+            	            else {/* print something when error occurs */
+            	            	RE_DRAW();
+            	            	consoleLog("fail run DFS from "+_source+" to "+_dest);
+            	            }
+            	        }
+            	    };
+            global_thread=new Thread(runner);
+            global_thread.start();
         } else if (x == "BFS") {
             txtConsole.setText("");
             if (_source == -1 || _dest == -1) {
@@ -519,43 +640,41 @@ public class GraphWindow extends JPanel {
             Bfs solution=new Bfs();
             solution.init(graph, _source, _dest, id+1);
             //solution.run();
-
-            cur_run=true;
-            for(int step=0;true;step++){
-            	data_contain=new String(solution.run(step,visited));
-            	System.out.println(data_contain);
-            	RE_DRAW();
-            	//delay function
-            	try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-//            	TODO input smt to GO_NEXT or GO_BACK
-//            	if() {
-//            		step++;
-//            		continue;
-//            	}
-//            	else if() {
-//            		step--;
-//            		continue;
-//            	}
-            	if(data_contain.equals("end"))break;
-            }
-            cur_run=false;
-
-            if(solution.path(_source,_dest,_path_)) {
-            	check_run=true;
-            	check_Dijkstra=false;
-            	RE_DRAW();
-            }
-            else {/* print something when error occurs */
-            	consoleLog("fail run BFS from "+_source+" to "+_dest);
-            }
-        }
-        else if (x == "Dijkstra") {
+            // TODO this is new
+            Runnable runner =
+            	    new Runnable(){
+            	        public void run(){
+            	        	cur_run=true;
+            	            System.out.println("LOOP MODE");
+            	            for(;true;){
+            	            	visited.clear();
+            	            	data_contain=new String(solution.run(step,visited));
+            	            	System.out.println(data_contain);
+            	            	RE_DRAW();
+            	            	//delay function
+            	            	try {
+            						Thread.sleep(1000);
+            					} catch (InterruptedException e) {
+            						e.printStackTrace();
+            					}
+            	            	if(data_contain.equals("end"))break;
+            	            	if(LOOP_MOD)step++;
+            	            }
+            	            cur_run=false;
+            	            if(solution.path(_source,_dest,_path_)) {
+            	            	check_run=true;
+            	            	check_Dijkstra=false;
+            	            	RE_DRAW();
+            	            }
+            	            else {/* print something when error occurs */
+            	            	RE_DRAW();
+            	            	consoleLog("fail run BFS from "+_source+" to "+_dest);
+            	            }
+            	        }
+            	    };
+            global_thread=new Thread(runner);
+            global_thread.start();
+        }else if (x == "Dijkstra") {
             txtConsole.setText("");
             if (_source == -1 || _dest == -1) {
                 if (_source == -1) {
@@ -568,43 +687,41 @@ public class GraphWindow extends JPanel {
             Dijkstra solution=new Dijkstra();
             solution.init(graph, _source, _dest, id+1);
             //solution.run();
-            cur_run=true;
-            for(int step=0;true;step++){
-            	data_contain=new String(solution.run(step,visited));
-            	System.out.println(data_contain);
-            	RE_DRAW();
-            	//delay function
-            	try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-//            	TODO input smt to GO_NEXT or GO_BACK
-//            	if() {
-//            		step++;
-//            		continue;
-//            	}
-//            	else if() {
-//            		step--;
-//            		continue;
-//            	}
-            	if(data_contain.equals("end"))break;
-            }
-            cur_run=false;
-
-
-            if(solution.path(_source,_dest,path_length,_path_)) {
-            	check_run=true;
-            	check_Dijkstra=true;
-            	RE_DRAW();
-            }
-            else {/* print something when error occurs */
-            	consoleLog("fail run Dijkstra from "+_source+" to "+_dest);
-            }
-        }
-        else if (x == "A* Search") {
+            // TODO this is new
+            Runnable runner =
+            	    new Runnable(){
+            	        public void run(){
+            	        	cur_run=true;
+            	            System.out.println("LOOP MODE");
+            	            for(;true;){
+            	            	visited.clear();
+            	            	data_contain=new String(solution.run(step,visited));
+            	            	System.out.println(data_contain);
+            	            	RE_DRAW();
+            	            	//delay function
+            	            	try {
+            						Thread.sleep(1000);
+            					} catch (InterruptedException e) {
+            						e.printStackTrace();
+            					}
+            	            	if(data_contain.equals("end"))break;
+            	            	if(LOOP_MOD)step++;
+            	            }
+            	            cur_run=false;
+            	            if(solution.path(_source,_dest,path_length,_path_)) {
+            	            	check_run=true;
+            	            	check_Dijkstra=true;
+            	            	RE_DRAW();
+            	            }
+            	            else {/* print something when error occurs */
+            	            	RE_DRAW();
+            	            	consoleLog("fail run Dijkstra from "+_source+" to "+_dest);
+            	            }
+            	        }
+            	    };
+            global_thread=new Thread(runner);
+            global_thread.start();
+        }else if (x == "A* Search") {
             txtConsole.setText("");
             if (_source == -1 || _dest == -1) {
                 if (_source == -1) {
@@ -626,43 +743,123 @@ public class GraphWindow extends JPanel {
 
             solution.init(graph, euler_destination, _source, _dest, id+1);
             //solution.run();
-            cur_run=true;
-            for(int step=0;true;step++){
-            	data_contain=new String(solution.run(step,visited));
-            	System.out.println(data_contain);
-            	RE_DRAW();
-            	//delay function
-            	try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-//            	TODO input smt to GO_NEXT or GO_BACK
-//            	if() {
-//            		step++;
-//            		continue;
-//            	}
-//            	else if() {
-//            		step--;
-//            		continue;
-//            	}
-            	if(data_contain.equals("end"))break;
-            }
-            cur_run=false;
-
-
-            if(solution.path(_source,_dest,path_length,_path_)) {
-            	check_run=true;
-            	check_Dijkstra=true;
-            	RE_DRAW();
-            }
-            else {/* print something when error occurs */
-            	consoleLog("fail run Dijkstra from "+_source+" to "+_dest);
-            }
+            // TODO this is new
+            Runnable runner =
+            	    new Runnable(){
+            	        public void run(){
+            	        	cur_run=true;
+            	            System.out.println("LOOP MODE");
+            	            for(;true;){
+            	            	visited.clear();
+            	            	data_contain=new String(solution.run(step,visited));
+            	            	System.out.println(data_contain);
+            	            	RE_DRAW();
+            	            	//delay function
+            	            	try {
+            						Thread.sleep(1000);
+            					} catch (InterruptedException e) {
+            						e.printStackTrace();
+            					}
+            	            	if(data_contain.equals("end"))break;
+            	            	if(LOOP_MOD)step++;
+            	            }
+            	            cur_run=false;
+            	            if(solution.path(_source,_dest,path_length,_path_)) {
+            	            	check_run=true;
+            	            	check_Dijkstra=true;
+            	            	RE_DRAW();
+            	            }
+            	            else {/* print something when error occurs */
+            	            	RE_DRAW();
+            	            	consoleLog("fail run A* from "+_source+" to "+_dest);
+            	            }
+            	        }
+            	    };
+            global_thread=new Thread(runner);
+            global_thread.start();
         }
-        RE_DRAW();
+        //RE_DRAW();
+	}
+
+	void algoCmbOnChange() {
+		//System.out.println("HAHAHA");
+		detail.setPreferredSize(new Dimension(algoPanel.getSize().width+200, algoPanel.getSize().height+50));
+		detail.setFont(new Font("Comic Sans MS", Font.PLAIN, 15));
+		detail.setTabSize(4);
+		detail.setEditable(false);
+
+		String type = String.valueOf(algoCmb.getSelectedItem());
+
+		if (type == "BFS")
+			detail.setText(""
+					+ "- Overview:\n"
+					+ "	BFS is a traversing algorithm where you should start\n"
+					+ "	traversing from a selected node (source or starting node)\n"
+					+ "	and traverse the graph layerwise thus exploring the neighbour\n"
+					+ "	nodes (nodes which are directly connected to source node).\n"
+					+ "	You must then move towards the next-level neighbour nodes.\n"
+					+ "\n- Psuedoode:\n"
+					+ "	BFS(G, s):\n"
+					+ "		let Q be queue.\n"
+					+ "		Q.enqueue( s )\n"
+					+ "		mark s as visited.\n"
+					+ "		while ( Q is not empty)\n"
+					+ "			v  =  Q.dequeue( )\n"
+					+ "			for all neighbours w of v in Graph G\n"
+					+ "				if w is not visited\n"
+					+ "					Q.enqueue( w )\n"
+					+ "					mark w as visited.\n"
+					+ "\n- Complexity:\n"
+					+ "	The time complexity of BFS is O(V + E), where V is the number of nodes\n"
+					+ "	and E is the number of edges.\n");
+		if (type == "DFS")
+			detail.setText(""
+					+ "- Overview:\n"
+					+ "	The DFS algorithm is a recursive algorithm that uses the idea\n"
+					+ "	of backtracking. It involves exhaustive searches of all the nodes\n"
+					+ "	by going ahead, if possible, else by backtracking.\n"
+					+ "\n- Psuedocode:\n"
+					+ "	DFS-iterative (G, s):\n"
+					+ "		let S be stack\n"
+					+ "		S.push( s )\n"
+					+ "		mark s as visited.\n"
+					+ "		while ( S is not empty):\n"
+					+ "			v  =  S.top( )\n"
+					+ "			S.pop( )\n"
+					+ "			for all neighbours w of v in Graph G:\n"
+					+ "				if w is not visited :\n"
+					+ "					S.push( w )\n"
+					+ "					mark w as visited\n"
+					+ "\n- Complexity:\n"
+					+ "	The time complexity of DFS is O(V + E), where V is the number of nodes\n"
+					+ "	and E is the number of edges.\n");
+		if (type == "Dijkstra")
+			detail.setText(""
+					+ "- Overview:\n"
+					+ "	Using the Dijkstra algorithm, it is possible to determine the\n"
+					+ "	shortest distance (or the least effort / lowest cost) between \n"
+					+ "	a start node and any other node in a graph. The idea of the algorithm\n"
+					+ "	is to continiously calculate the shortest distance beginning from\n"
+					+ "	a starting point, and to exclude longer distances when making an update.\n"
+					+ "\n- Psuedocode:\n"
+					+ "	Dijkstra(Graph, source):\n"
+					+ "		for each vertex v in Graph:\n"
+					+ "			dist[v] := infinity\n"
+					+ "			previous[v] := undefined\n"
+					+ "		dist[source] := 0\n"
+					+ "		Q := the set of all nodes in Graph\n"
+					+ "		while Q is not empty: \n"
+					+ "			u := node in Q with smallest dist[ ]\n"
+					+ "			remove u from Q\n"
+					+ "			for each neighbor v of u:\n"
+					+ "				alt := dist[u] + dist_between(u, v)\n"
+					+ "				if alt < dist[v]\n"
+					+ "					dist[v] := alt\n"
+					+ "					previous[v] := u\n"
+					+ "		return previous[ ]\n"
+					+ "\n- Complexity:\n"
+					+ "	O(V^2 + E log V) with matrix and priority queue\n"
+					+ "	E: Total edges, V: total vertices");
 	}
 
 

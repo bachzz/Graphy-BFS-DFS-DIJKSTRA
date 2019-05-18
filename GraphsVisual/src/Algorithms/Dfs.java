@@ -11,7 +11,8 @@ public class Dfs {
 	private int[] pre;
 	private LinkedList<Integer> stack = new LinkedList<Integer>();
 	private LinkedList<Integer> visitedQ = new LinkedList<Integer>();
-	
+
+
 	public void init(ArrayList<City>[] graph, int start,int dest, int num_city) {
 		this.graph = graph;
 		this.start = start;
@@ -46,7 +47,7 @@ public class Dfs {
 
 		stack.clear();
 		visitedQ.clear();
-		
+
 		for (int i = 0; i < num_city; i++) {
 			pre[i] = -1;
 		}
@@ -54,17 +55,27 @@ public class Dfs {
 
 		stack.addFirst(start);
 		visitedQ.add(start);
-		
+
 		loop: while (!stack.isEmpty()) {
 			temp = stack.peekFirst();
 			for (City itr : graph[temp]) {
 
-				if(stop==step) {
-					String str=new String("\n\nQueue = [ ");
-					for(Integer itr1:stack)str+=itr1.toString()+" ";
+				if(stop>=step) {
+					int c=10;
+					String str=new String("Queue = [ ");
+					for(Integer itr1:stack){
+						c+=(itr1.toString()+" ").length();
+						if(c>=25) {c=0;str+="\n";}
+						str+=itr1.toString()+" ";
+					}
 					str+="]";
-					str+="\n\nVisited = [";
-					for(Integer itr1:visitedQ)str+=itr1.toString()+" ";
+					c=10;
+					str+="\nVisited = [";
+					for(Integer itr1:visitedQ) {
+						c+=(itr1.toString()+" ").length();
+						if(c>=25) {c=0;str+="\n";}
+						str+=itr1.toString()+" ";
+					}
 					str+="]";
 					System.out.println(str);
 					return str;
@@ -78,7 +89,7 @@ public class Dfs {
 					stack.addFirst(itr.city);
 					pre[itr.city] = temp;
 					visitedQ.add(itr.city);
-					
+
 					if(itr.city==dest)return "end";
 					stop++;
 					continue loop;
@@ -88,6 +99,7 @@ public class Dfs {
 		}
 		return "end";
 	}
+
 
 	public void print() {
 		int temp;

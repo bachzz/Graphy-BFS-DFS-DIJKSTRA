@@ -15,15 +15,15 @@ public class A_start_search {
 	private int[] pre;
 	private HashSet<Integer> visitedQ = new HashSet<Integer>();
 
-	class Sortbydest implements Comparator<City>
-	{
-	    // Used for sorting in ascending order of
-	    // dest
-	    public int compare(City a, City b)
-	    {
-	        return (euler_dis.get(a.city)>euler_dis.get(b.city)?1:euler_dis.get(a.city)<euler_dis.get(b.city)?-1:0);
-	    }
-	}
+//	class Sortbydest implements Comparator<City>
+//	{
+//	    // Used for sorting in ascending order of
+//	    // dest
+//	    public int compare(City a, City b)
+//	    {
+//	        return (euler_dis.get(a.city)>euler_dis.get(b.city)?1:euler_dis.get(a.city)<euler_dis.get(b.city)?-1:0);
+//	    }
+//	}
 
 	public void init(ArrayList<City>[] graph,ArrayList<Double>euler_dis, int start,int dest, int num_city) {
 		this.graph = graph;
@@ -34,7 +34,10 @@ public class A_start_search {
 		/*sorting following distance to destination */
 		for (int i = 0; i < num_city; i++) {
 			if(graph[i]==null)continue;
-			Collections.sort(graph[i],new Sortbydest());
+			//Collections.sort(graph[i],new Sortbydest());
+			Collections.sort(graph[i],(City a, City b)->{
+			      return (euler_dis.get(a.city)>euler_dis.get(b.city)?1:euler_dis.get(a.city)<euler_dis.get(b.city)?-1:0);
+		    });
 		}
 		dis = new double[num_city];
 		pre = new int[num_city];
@@ -47,14 +50,17 @@ public class A_start_search {
 	}
 	//fix this
 	public void run() {
+		double best = Double.MAX_VALUE;;
 		que.add(new City(start, 0L));
 		while (que.size() > 0) {
 			City temp = que.poll();
 			for (City itr : graph[temp.city]) {
-				if (dis[itr.city] > euler_dis.get(itr.city) + temp.distance + itr.distance) {
-					dis[itr.city] = itr.distance + temp.distance;
+				if (dis[itr.city] == Double.MAX_VALUE || (dis[itr.city] > temp.distance + itr.distance)) {
+					dis[itr.city] = (pre[itr.city]>-1?itr.distance + temp.distance + euler_dis.get(itr.city) - euler_dis.get(pre[itr.city]):itr.distance + temp.distance + euler_dis.get(itr.city)-euler_dis.get(temp.city));
 					pre[itr.city] = temp.city;
-					que.add(new City(itr.city, dis[itr.city]));
+					que.add(new City(itr.city, dis[itr.city] ));
+					if(dis[que.peek().city]>best)return ;//optimal
+					if(itr.city==dest)best=(best>dis[dest]?dis[dest]:best);
 				}
 			}
 		}
@@ -70,7 +76,7 @@ public class A_start_search {
 		}
 		dis[start] = euler_dis.get(start);
 		pre[start] = -2;
-
+		visitedQ.clear();
 		visitedQ.add(start);
 		que.add(new City(start, euler_dis.get(start)));//bug
 		while (que.size() > 0) {
@@ -82,6 +88,7 @@ public class A_start_search {
 					for(Point itr1:visited)if(itr1.y==itr.city) {visited.remove(itr1);break;}
 					Point temp1=new Point(temp.city,itr.city);
 					visited.add(temp1);
+
 					visitedQ.add(itr.city);
 
 					dis[itr.city] = (pre[itr.city]>-1?itr.distance + temp.distance + euler_dis.get(itr.city) - euler_dis.get(pre[itr.city]):itr.distance + temp.distance + euler_dis.get(itr.city)-euler_dis.get(temp.city));
