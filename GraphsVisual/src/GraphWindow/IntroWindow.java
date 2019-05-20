@@ -15,16 +15,25 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
 public class IntroWindow {
-
+	private JFrame frame;
+	private JLabel textLabel;
+	private JButton aboutBtn;
+	private JButton simBtn;
+	private JPanel panel;
+	private ImageIcon icon;
+	private JLabel mainLabel;
+	private GraphWindow gWin;
+	private AboutWindow aWin;
+	
 	public IntroWindow() {
 		// TODO Auto-generated constructor stub
-		JFrame frame = new JFrame("GraphsVisual");
-		JLabel textLabel = new JLabel("Graphy", SwingConstants.CENTER);
-		JButton aboutBtn = new JButton("About");
-		JButton simBtn = new JButton("Simulation");
-		JPanel panel = new JPanel();
-		ImageIcon icon = new ImageIcon(getClass().getResource("background.png"));
-		JLabel mainLabel = new JLabel();
+		frame = new JFrame("GraphsVisual");
+		textLabel = new JLabel("Graphy", SwingConstants.CENTER);
+		aboutBtn = new JButton("About");
+		simBtn = new JButton("Simulation");
+		panel = new JPanel();
+		icon = new ImageIcon(getClass().getResource("background.png"));
+		mainLabel = new JLabel();
 
 		textLabel.setFont(new Font("Comic Sans MS", Font.BOLD, 40));
 		mainLabel.setLayout(new GridBagLayout());
@@ -69,10 +78,10 @@ public class IntroWindow {
 	}
 
 	void startSimulation() {
-		GraphWindow gWin = new GraphWindow();
+		gWin = new GraphWindow();
 	}
 
 	void about() {
-		AboutWindow aWin = new AboutWindow();
+		aWin = new AboutWindow();
 	}
 }

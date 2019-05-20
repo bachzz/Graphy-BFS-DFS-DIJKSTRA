@@ -76,7 +76,17 @@ public class GraphWindow extends JPanel {
 	private Thread global_thread;
 	private int step=0;
 	private boolean LOOP_MOD=true;
-
+	
+	private Dfs dfs_solution;
+	private Bfs bfs_solution;
+	private Dijkstra dijk_solution;
+	private A_start_search as_solution;
+	
+	private void pnlGraphComponentResized(java.awt.event.ComponentEvent evt) {
+		bufferImage = new BufferedImage(graphPanel.getWidth(),graphPanel.getHeight(),BufferedImage.TYPE_INT_RGB);
+		assert(bufferImage!=null);
+		graphicHandle = (Graphics2D) bufferImage.getGraphics();//(Graphics2D) graphPanel.getGraphics();
+	}
 	public void init() {
 		window = new JFrame("Graphy");
 		splitPane = new JSplitPane();
@@ -186,12 +196,18 @@ public class GraphWindow extends JPanel {
 		leftPanel.add(scrollPane);
 		scrollPane.setViewportView(txtConsole);
 		txtConsole.setEditable(false);
-
+		txtConsole.setFont(new Font("Arial", Font.BOLD, 17));
+		
 		rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS)); // BoxLayout.Y_AXIS will arrange the content vertically
 		rightPanel.add(graphPanel);
 		rightPanel.add(inputPanel); // then we add the inputPanel to the bottomPanel, so it under the scrollPane textArea
 
 		// graphPanel
+		graphPanel.addComponentListener(new java.awt.event.ComponentAdapter() {
+            public void componentResized(java.awt.event.ComponentEvent evt) {
+                pnlGraphComponentResized(evt);
+            }
+        });
 		graphPanel.setBackground(new Color(0, 0, 0));
 		graphPanel.setBorder(BorderFactory.createEtchedBorder());
 		graphPanel.addMouseMotionListener(new MouseMotionAdapter() {
@@ -591,8 +607,8 @@ public class GraphWindow extends JPanel {
                 return;
             }
 
-            Dfs solution=new Dfs();
-            solution.init(graph, _source, _dest, id+1);
+            dfs_solution=new Dfs();
+            dfs_solution.init(graph, _source, _dest, id+1);
             // TODO this is new
             Runnable runner =
             	    new Runnable(){
@@ -601,7 +617,7 @@ public class GraphWindow extends JPanel {
             	            System.out.println("LOOP MODE");
             	            for(;true;){
             	            	visited.clear();
-            	            	data_contain=new String(solution.run(step,visited));
+            	            	data_contain=new String(dfs_solution.run(step,visited));
             	            	System.out.println(data_contain);
             	            	RE_DRAW();
             	            	//delay function
@@ -614,7 +630,7 @@ public class GraphWindow extends JPanel {
             	            	if(LOOP_MOD)step++;
             	            }
             	            cur_run=false;
-            	            if(solution.path(_source,_dest,_path_)) {
+            	            if(dfs_solution.path(_source,_dest,_path_)) {
             	            	check_run=true;
             	            	check_Dijkstra=false;
             	            	RE_DRAW();
@@ -637,8 +653,8 @@ public class GraphWindow extends JPanel {
                 }
                 return;
             }
-            Bfs solution=new Bfs();
-            solution.init(graph, _source, _dest, id+1);
+            bfs_solution=new Bfs();
+            bfs_solution.init(graph, _source, _dest, id+1);
             //solution.run();
             // TODO this is new
             Runnable runner =
@@ -648,7 +664,7 @@ public class GraphWindow extends JPanel {
             	            System.out.println("LOOP MODE");
             	            for(;true;){
             	            	visited.clear();
-            	            	data_contain=new String(solution.run(step,visited));
+            	            	data_contain=new String(bfs_solution.run(step,visited));
             	            	System.out.println(data_contain);
             	            	RE_DRAW();
             	            	//delay function
@@ -661,7 +677,7 @@ public class GraphWindow extends JPanel {
             	            	if(LOOP_MOD)step++;
             	            }
             	            cur_run=false;
-            	            if(solution.path(_source,_dest,_path_)) {
+            	            if(bfs_solution.path(_source,_dest,_path_)) {
             	            	check_run=true;
             	            	check_Dijkstra=false;
             	            	RE_DRAW();
@@ -684,8 +700,8 @@ public class GraphWindow extends JPanel {
                 }
                 return;
             }
-            Dijkstra solution=new Dijkstra();
-            solution.init(graph, _source, _dest, id+1);
+            dijk_solution=new Dijkstra();
+            dijk_solution.init(graph, _source, _dest, id+1);
             //solution.run();
             // TODO this is new
             Runnable runner =
@@ -695,7 +711,7 @@ public class GraphWindow extends JPanel {
             	            System.out.println("LOOP MODE");
             	            for(;true;){
             	            	visited.clear();
-            	            	data_contain=new String(solution.run(step,visited));
+            	            	data_contain=new String(dijk_solution.run(step,visited));
             	            	System.out.println(data_contain);
             	            	RE_DRAW();
             	            	//delay function
@@ -708,7 +724,7 @@ public class GraphWindow extends JPanel {
             	            	if(LOOP_MOD)step++;
             	            }
             	            cur_run=false;
-            	            if(solution.path(_source,_dest,path_length,_path_)) {
+            	            if(dijk_solution.path(_source,_dest,path_length,_path_)) {
             	            	check_run=true;
             	            	check_Dijkstra=true;
             	            	RE_DRAW();
@@ -731,7 +747,7 @@ public class GraphWindow extends JPanel {
                 }
                 return;
             }
-            A_start_search solution=new A_start_search();
+            as_solution=new A_start_search();
             // special for A*: heuristic to destianation
             ArrayList<Double>euler_destination=new ArrayList<Double>();
             for(Integer i = 0 ; i <id+1 ; i++) {
@@ -741,7 +757,7 @@ public class GraphWindow extends JPanel {
             	euler_destination.set(i, dis);
             }
 
-            solution.init(graph, euler_destination, _source, _dest, id+1);
+            as_solution.init(graph, euler_destination, _source, _dest, id+1);
             //solution.run();
             // TODO this is new
             Runnable runner =
@@ -751,7 +767,7 @@ public class GraphWindow extends JPanel {
             	            System.out.println("LOOP MODE");
             	            for(;true;){
             	            	visited.clear();
-            	            	data_contain=new String(solution.run(step,visited));
+            	            	data_contain=new String(as_solution.run(step,visited));
             	            	System.out.println(data_contain);
             	            	RE_DRAW();
             	            	//delay function
@@ -764,7 +780,7 @@ public class GraphWindow extends JPanel {
             	            	if(LOOP_MOD)step++;
             	            }
             	            cur_run=false;
-            	            if(solution.path(_source,_dest,path_length,_path_)) {
+            	            if(as_solution.path(_source,_dest,path_length,_path_)) {
             	            	check_run=true;
             	            	check_Dijkstra=true;
             	            	RE_DRAW();

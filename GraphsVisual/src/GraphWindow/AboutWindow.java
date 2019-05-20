@@ -17,17 +17,17 @@ import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 
 public class AboutWindow {
-	JFrame frame = new JFrame("About");
-	JSplitPane splitPane = new JSplitPane();
+	private JFrame frame = new JFrame("About");
+	private JSplitPane splitPane = new JSplitPane();
 
-	JPanel leftPnl = new JPanel();
-	JPanel rightPnl = new JPanel();
+	private JPanel leftPnl = new JPanel();
+	private JPanel rightPnl = new JPanel();
 
-	JButton bfsBtn = new JButton("BFS");
-	JButton dfsBtn = new JButton("DFS");
-	JButton dijkBtn = new JButton("Dijkstra");
-	JTextArea detail = new JTextArea();
-	JScrollPane scroll = new JScrollPane();
+	private JButton bfsBtn = new JButton("BFS");
+	private JButton dfsBtn = new JButton("DFS");
+	private JButton dijkBtn = new JButton("Dijkstra");
+	private JTextArea detail = new JTextArea();
+	private JScrollPane scroll = new JScrollPane();
 
 	public AboutWindow() {
 		// TODO Auto-generated constructor stub
