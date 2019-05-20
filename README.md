@@ -9,7 +9,7 @@
 		- create components
 		- event handlers 
 		- create new node: map each `Point` onclick with each `node` in list of `<node, adjacent nodes>`
-		- drag nodes
+		- move nodes
 		- delete nodes 
 	- Animation: dotted line moving from `Source` to `Destination`
 	- Class diagram
